@@ -1,59 +1,48 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 from app.core.security import require_operator_or_admin
-from app.core.database import get_db
-
 
 router = APIRouter(
     prefix="/api/congestion",
     tags=["Congestion Tracking"]
 )
 
+# Demonstration-only data. These are simulated values, not live passenger counts.
+HYDERABAD_DEMO_STATIONS = [
+    {"station": "Ameerpet", "entries": 9500, "exits": 9100},
+    {"station": "Miyapur", "entries": 8200, "exits": 7600},
+    {"station": "HITEC City", "entries": 7300, "exits": 6800},
+    {"station": "KPHB Colony", "entries": 6100, "exits": 5900},
+    {"station": "Raidurg", "entries": 5400, "exits": 5100},
+    {"station": "Uppal", "entries": 4800, "exits": 4600},
+    {"station": "Parade Grounds", "entries": 4100, "exits": 3900},
+    {"station": "MGBS", "entries": 3200, "exits": 3500},
+    {"station": "LB Nagar", "entries": 2800, "exits": 2600},
+    {"station": "Secunderabad East", "entries": 2400, "exits": 2300},
+]
+
 
 @router.get("/summary")
 def congestion_summary(
-    db: Session = Depends(get_db),
-    current_user = Depends(require_operator_or_admin)
+    current_user=Depends(require_operator_or_admin)
 ):
-    # Overall traffic statistics
-    overall = db.execute(
-        text("""
-            SELECT
-                COUNT(*) AS total_records,
-                COALESCE(SUM(entries), 0) AS total_entries,
-                COALESCE(SUM(exits), 0) AS total_exits
-            FROM nyc_subway_traffic
-        """)
-    ).mappings().one()
+    top_stations = [
+        {
+            **station,
+            "total_activity": station["entries"] + station["exits"]
+        }
+        for station in HYDERABAD_DEMO_STATIONS
+    ]
 
-    # Stations with the highest combined entry and exit activity
-    top_stations = db.execute(
-        text("""
-            SELECT
-                stop_name,
-                COALESCE(SUM(entries), 0) AS entries,
-                COALESCE(SUM(exits), 0) AS exits,
-                COALESCE(SUM(entries), 0)
-                    + COALESCE(SUM(exits), 0) AS total_activity
-            FROM nyc_subway_traffic
-            GROUP BY stop_name
-            ORDER BY total_activity DESC
-            LIMIT 10
-        """)
-    ).mappings().all()
+    top_stations.sort(
+        key=lambda station: station["total_activity"],
+        reverse=True
+    )
 
     return {
-        "total_records": overall["total_records"],
-        "total_entries": overall["total_entries"],
-        "total_exits": overall["total_exits"],
-        "top_congested_stations": [
-            {
-                "station": row["stop_name"],
-                "entries": row["entries"],
-                "exits": row["exits"],
-                "total_activity": row["total_activity"]
-            }
-            for row in top_stations
-        ]
+        "total_records": sum(120 for _ in top_stations),
+        "total_entries": sum(s["entries"] for s in top_stations),
+        "total_exits": sum(s["exits"] for s in top_stations),
+        "top_congested_stations": top_stations[:10],
+        "data_source": "simulated",
+        "notice": "Demonstration data only; not live Hyderabad Metro measurements."
     }

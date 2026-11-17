@@ -1,46 +1,34 @@
-import psycopg2
+
+# Hyderabad Metro station locations.
+# These are approximate map coordinates, not live crowd measurements.
+
+HYDERABAD_STATIONS = [
+    {"station": "Miyapur", "latitude": 17.4968, "longitude": 78.3560},
+    {"station": "KPHB Colony", "latitude": 17.4933, "longitude": 78.3997},
+    {"station": "Kukatpally", "latitude": 17.4849, "longitude": 78.4138},
+    {"station": "Ameerpet", "latitude": 17.4375, "longitude": 78.4483},
+    {"station": "Punjagutta", "latitude": 17.4287, "longitude": 78.4528},
+    {"station": "Raidurg", "latitude": 17.4421, "longitude": 78.3772},
+    {"station": "HITEC City", "latitude": 17.4474, "longitude": 78.3816},
+    {"station": "Secunderabad East", "latitude": 17.4344, "longitude": 78.5013},
+    {"station": "Parade Grounds", "latitude": 17.4430, "longitude": 78.4980},
+    {"station": "Uppal", "latitude": 17.4016, "longitude": 78.5591},
+    {"station": "MGBS", "latitude": 17.3784, "longitude": 78.4804},
+    {"station": "LB Nagar", "latitude": 17.3497, "longitude": 78.5480},
+]
 
 
 def get_heatmap_data():
-    conn = psycopg2.connect(dbname="metroflow_db")
-
-    query = """
-        SELECT
-            stop_name,
-            latitude,
-            longitude,
-            SUM(entries) AS entries,
-            SUM(exits) AS exits
-        FROM nyc_subway_traffic
-        WHERE latitude IS NOT NULL
-          AND longitude IS NOT NULL
-        GROUP BY stop_name, latitude, longitude
-        ORDER BY entries DESC
-        LIMIT 100;
-    """
-
-    cursor = conn.cursor()
-    cursor.execute(query)
-
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    heatmap = []
-
-    for row in rows:
-        stop_name, latitude, longitude, entries, exits = row
-
-        intensity = float(entries or 0) + float(exits or 0)
-
-        heatmap.append({
-            "station": stop_name,
-            "latitude": float(latitude),
-            "longitude": float(longitude),
-            "intensity": intensity,
-        })
+    stations = [
+        {
+            **station,
+            "intensity": None,
+        }
+        for station in HYDERABAD_STATIONS
+    ]
 
     return {
-        "count": len(heatmap),
-        "heatmap": heatmap,
+        "count": len(stations),
+        "source": "station_locations",
+        "heatmap": stations,
     }

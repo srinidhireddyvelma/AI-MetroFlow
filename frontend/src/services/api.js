@@ -89,3 +89,6 @@ export function getStoredUser() {
     return null;
   }
 }
+export async function getRealtimeSimulation() {
+  return request("/api/realtime/simulate");
+}

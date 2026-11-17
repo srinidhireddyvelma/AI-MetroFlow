@@ -45,20 +45,20 @@ function Congestion() {
   }
 
   return (
-    <div className="page-content">
+    <div className="page-content congestion-page">
       <div className="page-heading">
         <div>
           <p className="eyebrow">NETWORK CONGESTION INTELLIGENCE</p>
           <h2>Congestion Tracking</h2>
           <p>
-            Analyze station activity using recorded metro entry and
-            exit data.
+            Analyze simulated Hyderabad Metro station activity using estimated
+            entry and exit counts.
           </p>
         </div>
 
         <div className="live-badge">
           <span></span>
-          LIVE DATA
+          SIMULATION MODE
         </div>
       </div>
 
@@ -82,7 +82,7 @@ function Congestion() {
               <div>
                 <span>Total Traffic Records</span>
                 <strong>{formatCompactNumber(totalRecords)}</strong>
-                <small>Subway traffic dataset</small>
+                <small>Simulated activity records</small>
               </div>
             </div>
 
